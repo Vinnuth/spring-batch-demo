@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:batch="http://www.springframework.org/schema/batch" xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<import resource="data-source-context.xml" />
+
+	<bean id="customerWriter"
+		class="com.sekisuihouse.springframework.batch.demo.customer.CustomerWriter"
+		p:dataSource-ref="dataSource" />
+
+	<bean id="customerReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+		<property name="resource" value="classpath:data/customer.csv" />
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="names"
+							value="customer_id,first_name,last_name,mail_address" />
+					</bean>
+				</property>
+				<property name="fieldSetMapper">
+					<bean
+						class="com.sekisuihouse.springframework.batch.demo.customer.CustomerFieldSetMapper" />
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+	<job id="customerJob" xmlns="http://www.springframework.org/schema/batch">
+		<step id="customerStep">
+			<tasklet>
+				<chunk reader="customerReader" writer="customerWriter"
+					commit-interval="5" />
+			</tasklet>
+		</step>
+	</job>
+
+</beans>
